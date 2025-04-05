@@ -1,0 +1,3 @@
+[submodule "DigitalPartyPlanner"]
+	path = DigitalPartyPlanner
+	url = https://github.com/eduval/DigitalPartyPlanner
