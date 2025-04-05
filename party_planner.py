@@ -1,30 +1,54 @@
-import cgi # type: ignore
+#!/usr/bin/env python3
 
-party_items = [
-    ("Cake", 20), ("Balloons", 21), ("Music System", 10), ("Lights", 5),
-    ("Catering Service", 8), ("DJ", 3), ("Photo Booth", 15), ("Tables", 7),
-    ("Chairs", 12), ("Drinks", 6), ("Party Hats", 9), ("Streamers", 18),
-    ("Invitation Cards", 4), ("Party Games", 2), ("Cleaning Service", 11)
-]
+import cgi
+import html
+party_items = {
+    0: ("Cake", 20),
+    1: ("Balloons", 21),
+    2: ("Music System", 10),
+    3: ("Lights", 5),
+    4: ("Catering Service", 8),
+    5: ("DJ", 3),
+    6: ("Photo Booth", 15),
+    7: ("Tables", 7),
+    8: ("Chairs", 12),
+    9: ("Drinks", 6),
+    10: ("Party Hats", 9),
+    11: ("Streamers", 18),
+    12: ("Invitation Cards", 4),
+    13: ("Party Games", 2),
+    14: ("Cleaning Service", 11)
+}
+
+print("Content-type: text/html\n")
 
 form = cgi.FieldStorage()
-selected_indices = form.getlist("items")
-
-selected_items = []
-values = []
 
 try:
-    for idx in selected_indices:
-        index = int(idx)
-        item, value = party_items[index]
-        selected_items.append(item)
-        values.append(value)
+    raw_indices = form.getvalue("items")
+
+    if not raw_indices:
+        raise ValueError("No items were selected.")
+
+    indices = [int(i.strip()) for i in raw_indices.split(",")]
+
+    selected_items = []
+    values = []
+
+    for idx in indices:
+        if idx in party_items:
+            item_name, item_value = party_items[idx]
+            selected_items.append(item_name)
+            values.append(item_value)
+        else:
+            raise IndexError(f"Invalid index: {idx}")
 
     base_code = values[0]
     for val in values[1:]:
         base_code &= val
 
     original_base_code = base_code
+
     if base_code == 0:
         base_code += 5
         message = "Epic Party Incoming!"
@@ -34,15 +58,18 @@ try:
     else:
         message = "Chill vibes only!"
 
-    print("Content-type: text/html\n")
-    print("<html><head><title>Party Planner Result</title></head><body>")
-    print("<h2>🎉 Digital Party Planner Results 🎉</h2>")
-    print("<p><strong>Selected Items:</strong> " + ", ".join(selected_items) + "</p>")
-    print("<p><strong>Base Party Code:</strong> {} (from values: {})</p>".format(original_base_code, " & ".join(map(str, values))))
-    print("<p><strong>Final Party Code:</strong> {}</p>".format(base_code))
-    print("<p><strong>Message:</strong> {}</p>".format(message))
+    print("<html><body>")
+    print("<h2>Selected Party Items:</h2>")
+    print("<ul>")
+    for item in selected_items:
+        print(f"<li>{html.escape(item)}</li>")
+    print("</ul>")
+    print(f"<p><strong>Base Party Code:</strong> {original_base_code}</p>")
+    print(f"<p><strong>Final Party Code:</strong> {base_code}</p>")
+    print(f"<p><strong>Message:</strong> {html.escape(message)}</p>")
     print("</body></html>")
 
 except Exception as e:
-    print("Content-type: text/html\n")
-    print("<html><body><h2>Error processing form:</h2><p>{}</p></body></html>".format(e))
+    print("<html><body><h2>Error processing form:</h2>")
+    print(f"<p>{html.escape(str(e))}</p></body></html>")
+
